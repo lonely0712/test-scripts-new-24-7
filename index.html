@@ -3,24 +3,68 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Open URL Test</title>
+  <title>Install Shadowrocket Module</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 20px; }
-    input { width: 100%; padding: 12px; font-size: 16px; margin-bottom: 12px; }
-    button { padding: 12px 18px; font-size: 16px; cursor: pointer; }
+    body {
+      font-family: Arial, sans-serif;
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      padding: 28px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+      max-width: 520px;
+      text-align: center;
+    }
+    button, a.btn {
+      display: inline-block;
+      margin-top: 14px;
+      padding: 12px 18px;
+      border: none;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 16px;
+      cursor: pointer;
+      background: black;
+      color: white;
+    }
+    code {
+      word-break: break-all;
+      display: block;
+      margin-top: 12px;
+      background: #f3f3f3;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
-  <h1>Open URL Test</h1>
-  <input id="url" type="text" value="https://raw.githubusercontent.com/example/repo/main/file.txt">
-  <button onclick="openUrl()">Open URL</button>
+  <div class="card">
+    <h1>Install Module in Shadowrocket</h1>
+    <p>Tap the button below on your iPhone.</p>
+
+    <a class="btn" id="installBtn" href="#">
+      Install in Shadowrocket
+    </a>
+
+    <code id="rawUrl"></code>
+  </div>
 
   <script>
-    function openUrl() {
-      const url = document.getElementById('url').value.trim();
-      if (!url) return;
-      window.location.href = url;
-    }
+    const rawModuleUrl =
+      "https://raw.githubusercontent.com/lonely0712/Scripts/main/static/modules/shadowrocketmodule.module";
+
+    const installUrl =
+      "shadowrocket://install?module=" + encodeURIComponent(rawModuleUrl);
+
+    document.getElementById("installBtn").href = installUrl;
+    document.getElementById("rawUrl").textContent = rawModuleUrl;
   </script>
 </body>
 </html>
