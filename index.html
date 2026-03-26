@@ -4,91 +4,129 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Shadowrocket Module Installer</title>
-
+  <link rel="stylesheet" href="index.css" />
   <style>
-    body {
-      font-family: Arial;
+    .top-box {
+      width: 100%;
+      max-width: 700px;
+      background: #181818;
+      border: 2px solid #2a2a2a;
+      border-radius: 14px;
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+      box-sizing: border-box;
+    }
+    .top-box h2 {
+      margin-top: 0;
+      color: #00ffe1;
+    }
+    .helper-text {
+      color: #bbb;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+    .paste-row {
       display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: #f4f4f4;
-      margin: 0;
+      gap: 0.75rem;
+      flex-wrap: wrap;
     }
-    .box {
-      background: white;
-      padding: 25px;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      width: 90%;
-      max-width: 500px;
-      text-align: center;
-    }
-    input {
-      width: 100%;
-      padding: 12px;
+    .paste-row input {
+      flex: 1;
+      min-width: 240px;
+      padding: 0.85rem 1rem;
+      border: 2px solid #2a2a2a;
+      background: #101010;
+      color: #fff;
       border-radius: 10px;
-      border: 1px solid #ddd;
-      margin-top: 10px;
+      font-size: 1rem;
     }
-    button {
-      margin-top: 12px;
-      padding: 12px;
-      width: 100%;
+    .paste-row button,
+    .action-btn {
+      padding: 0.85rem 1rem;
       border: none;
       border-radius: 10px;
-      background: black;
-      color: white;
-      font-size: 16px;
+      background: #00ffe1;
+      color: #000;
+      font-weight: bold;
       cursor: pointer;
-    }
-    a.install {
-      display: block;
-      margin-top: 15px;
-      padding: 12px;
-      background: green;
-      color: white;
       text-decoration: none;
-      border-radius: 10px;
+      display: inline-block;
     }
-    code {
+    .paste-row button:hover,
+    .action-btn:hover {
+      background: #00d5be;
+    }
+    .result-box {
+      margin-top: 1rem;
+      display: none;
+      background: #101010;
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: left;
+    }
+    .result-box code {
       display: block;
-      margin-top: 10px;
       word-break: break-all;
-      background: #eee;
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 12px;
+      color: #d7d7d7;
+      margin-bottom: 0.75rem;
+    }
+    .stats {
+      margin-bottom: 1.5rem;
+      color: #aaa;
+    }
+    .empty-state {
+      color: #888;
+      text-align: center;
+      margin-top: 2rem;
     }
   </style>
 </head>
-
 <body>
-  <div class="box">
-    <h2>Shadowrocket Installer</h2>
+  <h1>Shadowrocket Modules</h1>
+  <p>Install modules directly in Shadowrocket from this page.</p>
 
-    <p>Paste any GitHub module link:</p>
-    <input id="input" placeholder="Paste GitHub link here..." />
+  <div class="top-box">
+    <h2>Paste Any GitHub Module Link</h2>
+    <div class="helper-text">
+      Paste a GitHub raw link or normal blob link. It will be converted automatically.
+    </div>
 
-    <button onclick="generate()">Generate Install Link</button>
+    <div class="paste-row">
+      <input id="githubInput" placeholder="Paste GitHub module link here..." />
+      <button onclick="generateInstall()">Generate</button>
+    </div>
 
-    <a id="installBtn" class="install" style="display:none;">
-      Install in Shadowrocket
-    </a>
-
-    <code id="output"></code>
+    <div id="resultBox" class="result-box">
+      <strong>Raw URL</strong>
+      <code id="rawOutput"></code>
+      <a id="manualInstallBtn" class="action-btn" href="#" target="_self">Install in Shadowrocket</a>
+    </div>
   </div>
 
+  <div class="search-container">
+    <input id="searchInput" type="text" placeholder="Search modules..." />
+  </div>
+
+  <div class="stats" id="stats">Loading modules...</div>
+  <div class="module-list" id="moduleList"></div>
+  <div class="empty-state" id="emptyState" style="display:none;">No modules found.</div>
+
   <script>
+    const GITHUB_USER = "lonely0712";
+    const GITHUB_REPO = "Scripts";
+    const GITHUB_BRANCH = "main";
+
     function convertToRaw(url) {
       try {
+        url = url.trim();
+
         if (url.includes("raw.githubusercontent.com")) {
           return url;
         }
 
         if (url.includes("github.com")) {
           return url
-            .replace("github.com", "raw.githubusercontent.com")
+            .replace("https://github.com/", "https://raw.githubusercontent.com/")
             .replace("/blob/", "/");
         }
 
@@ -98,23 +136,97 @@
       }
     }
 
-    function generate() {
-      const input = document.getElementById("input").value.trim();
+    function makeShadowrocketInstallUrl(rawUrl) {
+      return "shadowrocket://install?module=" + encodeURIComponent(rawUrl);
+    }
 
+    function generateInstall() {
+      const input = document.getElementById("githubInput").value.trim();
       if (!input) {
-        alert("Paste a link first");
+        alert("Paste a GitHub link first.");
         return;
       }
 
-      const raw = convertToRaw(input);
-      const finalUrl = "shadowrocket://install?module=" + encodeURIComponent(raw);
+      const rawUrl = convertToRaw(input);
+      const installUrl = makeShadowrocketInstallUrl(rawUrl);
 
-      const btn = document.getElementById("installBtn");
-      btn.href = finalUrl;
-      btn.style.display = "block";
-
-      document.getElementById("output").textContent = raw;
+      document.getElementById("rawOutput").textContent = rawUrl;
+      document.getElementById("manualInstallBtn").href = installUrl;
+      document.getElementById("resultBox").style.display = "block";
     }
+
+    async function loadModules() {
+      const list = document.getElementById("moduleList");
+      const stats = document.getElementById("stats");
+      const emptyState = document.getElementById("emptyState");
+
+      try {
+        const res = await fetch("./modules.json", { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to load modules.json");
+
+        const modules = await res.json();
+        window.allModules = modules;
+
+        renderModules(modules);
+        stats.textContent = `${modules.length} module${modules.length !== 1 ? "s" : ""} loaded automatically`;
+        emptyState.style.display = modules.length ? "none" : "block";
+      } catch (err) {
+        list.innerHTML = "";
+        stats.textContent = "Could not load modules.json";
+        emptyState.style.display = "block";
+        emptyState.textContent = "Failed to load modules list.";
+        console.error(err);
+      }
+    }
+
+    function renderModules(modules) {
+      const list = document.getElementById("moduleList");
+      const emptyState = document.getElementById("emptyState");
+      list.innerHTML = "";
+
+      if (!modules.length) {
+        emptyState.style.display = "block";
+        return;
+      }
+
+      emptyState.style.display = "none";
+
+      modules.forEach(mod => {
+        const item = document.createElement("div");
+        item.className = "module-item";
+
+        const title = document.createElement("div");
+        title.className = "module-title";
+        title.textContent = mod.name;
+
+        const btn = document.createElement("a");
+        btn.className = "install-button";
+
+        const rawUrl =
+          `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/modules/${encodeURIComponent(mod.file)}`;
+
+        btn.href = makeShadowrocketInstallUrl(rawUrl);
+        btn.textContent = "Install";
+        btn.target = "_self";
+
+        item.appendChild(title);
+        item.appendChild(btn);
+        list.appendChild(item);
+      });
+    }
+
+    document.getElementById("searchInput").addEventListener("input", function () {
+      const q = this.value.trim().toLowerCase();
+      const filtered = (window.allModules || []).filter(m =>
+        m.name.toLowerCase().includes(q) || m.file.toLowerCase().includes(q)
+      );
+      renderModules(filtered);
+
+      const stats = document.getElementById("stats");
+      stats.textContent = `${filtered.length} result${filtered.length !== 1 ? "s" : ""}`;
+    });
+
+    loadModules();
   </script>
 </body>
 </html>
